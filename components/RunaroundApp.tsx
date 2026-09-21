@@ -37,6 +37,7 @@ export default function RunaroundApp() {
   const [copied, setCopied] = useState(false);
 
   const letter = useMemo(() => (selected ? generateLetter(selected, values) : ""), [selected, values]);
+  const socialSeeds = tools.slice(6, 12);
 
   function choose(tool: ToolDefinition) {
     setSelected(tool);
@@ -56,7 +57,7 @@ export default function RunaroundApp() {
     <main>
       <header className="topbar">
         <a className="brand" href="#top" aria-label="The Runaround home">THE RUNAROUND<span>™</span></a>
-        <nav><a href="#tools">Tools</a><a href="#myth">Myth check</a><a href="#principles">How it works</a></nav>
+        <nav><a href="#tools">20 runarounds</a><a href="#myth">Myth check</a><a href="#principles">How it works</a></nav>
       </header>
 
       <section id="top" className="hero">
@@ -70,10 +71,10 @@ export default function RunaroundApp() {
           <div className="stamp">NO FACEBOOK LAW</div>
           <p>We separate the actual rule from the internet version of the rule.</p>
           <ul>
-            <li>Official sources</li>
-            <li>Plain-English conditions</li>
-            <li>Copy-ready wording</li>
-            <li>Escalation paths</li>
+            <li>20 verified runarounds</li>
+            <li>Official NZ sources</li>
+            <li>Escalation ladders</li>
+            <li>Copy-ready wording where useful</li>
           </ul>
         </aside>
       </section>
@@ -81,15 +82,15 @@ export default function RunaroundApp() {
       <section id="tools" className="section">
         <div className="section-head">
           <span>01</span>
-          <div><p className="eyebrow">WHAT&apos;S PISSING YOU OFF?</p><h2>Pick the runaround.</h2></div>
+          <div><p className="eyebrow">WHAT&apos;S PISSING YOU OFF?</p><h2>Pick the runaround.</h2><p className="section-copy">Six tools build wording now. Fourteen more expose the rule, the escalation path and the source.</p></div>
         </div>
         <div className="tool-grid">
           {tools.map((tool) => (
             <button key={tool.id} className="tool-card" onClick={() => choose(tool)}>
-              <small>{tool.eyebrow}</small>
+              <div className="tool-meta"><small>{tool.eyebrow}</small><em>{tool.mode === "builder" ? "BUILDER" : "QUICK RIGHT"}</em></div>
               <strong>{tool.title}</strong>
               <span>{tool.summary}</span>
-              <b>OPEN TOOL →</b>
+              <b>{tool.mode === "builder" ? "BUILD WORDING →" : "SEE THE LEVER →"}</b>
             </button>
           ))}
         </div>
@@ -98,47 +99,66 @@ export default function RunaroundApp() {
       {selected && (
         <section id="tool" className="builder-wrap">
           <div className="builder-intro">
-            <button className="text-button" onClick={() => setSelected(null)}>← Close tool</button>
+            <button className="text-button" onClick={() => setSelected(null)}>← Close</button>
             <p className="eyebrow">{selected.eyebrow}</p>
             <h2>{selected.title}</h2>
             <div className="rule-box"><b>THE RULE</b><p>{selected.rule}</p></div>
-            {selected.caution && <div className="caution"><b>DON&apos;T BE SILLY</b><p>{selected.caution}</p></div>}
+            {selected.caution && <div className="caution"><b>CHECK THE CONDITIONS</b><p>{selected.caution}</p></div>}
+            <div className="ladder">
+              <b>THE ESCALATION LADDER</b>
+              {selected.ladder.map((step, index) => (
+                <div className="ladder-step" key={step.title}><span>{index + 1}</span><div><strong>{step.title}</strong><p>{step.detail}</p></div></div>
+              ))}
+            </div>
             <a className="source-link" href={selected.sourceUrl} target="_blank" rel="noreferrer">Official source ↗ <span>{selected.sourceLabel}</span></a>
           </div>
 
-          <div className="builder">
-            <div className="form-panel">
-              <h3>Tell us what happened.</h3>
-              {selected.fields.map((field) => (
-                <label key={field.key}>
-                  <span>{field.label}{field.required && " *"}</span>
-                  {field.type === "textarea" ? (
-                    <textarea value={values[field.key] || ""} placeholder={field.placeholder} onChange={(e) => setValues({ ...values, [field.key]: e.target.value })} />
-                  ) : field.type === "select" ? (
-                    <select value={values[field.key] || ""} onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}>
-                      <option value="">Select…</option>{field.options?.map((o) => <option key={o}>{o}</option>)}
-                    </select>
-                  ) : (
-                    <input type={field.type || "text"} value={values[field.key] || ""} placeholder={field.placeholder} onChange={(e) => setValues({ ...values, [field.key]: e.target.value })} />
-                  )}
-                  {field.helper && <small>{field.helper}</small>}
-                </label>
-              ))}
-              <button className="primary full" onClick={() => setGenerated(true)}>Build my wording →</button>
-            </div>
+          {selected.mode === "builder" ? (
+            <div className="builder">
+              <div className="form-panel">
+                <h3>Tell us what happened.</h3>
+                {(selected.fields || []).map((field) => (
+                  <label key={field.key}>
+                    <span>{field.label}{field.required && " *"}</span>
+                    {field.type === "textarea" ? (
+                      <textarea value={values[field.key] || ""} placeholder={field.placeholder} onChange={(e) => setValues({ ...values, [field.key]: e.target.value })} />
+                    ) : field.type === "select" ? (
+                      <select value={values[field.key] || ""} onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}>
+                        <option value="">Select…</option>{field.options?.map((o) => <option key={o}>{o}</option>)}
+                      </select>
+                    ) : (
+                      <input type={field.type || "text"} value={values[field.key] || ""} placeholder={field.placeholder} onChange={(e) => setValues({ ...values, [field.key]: e.target.value })} />
+                    )}
+                    {field.helper && <small>{field.helper}</small>}
+                  </label>
+                ))}
+                <button className="primary full" onClick={() => setGenerated(true)}>Build my wording →</button>
+              </div>
 
-            <div className={`output-panel ${generated ? "ready" : ""}`}>
-              {!generated ? (
-                <div className="empty-output"><span>YOUR WORDING<br/>APPEARS HERE</span><p>No account. No subscription. No pretending this is legal advice.</p></div>
-              ) : (
-                <>
-                  <div className="output-head"><div><small>DRAFT GENERATED</small><h3>Copy. Check. Send.</h3></div><button onClick={copyLetter}>{copied ? "COPIED ✓" : "COPY"}</button></div>
-                  <pre>{letter}</pre>
-                  <p className="disclaimer">Check names, dates, facts and any legal issue specific to your situation before sending. This tool provides general information and drafting support, not legal advice.</p>
-                </>
-              )}
+              <div className={`output-panel ${generated ? "ready" : ""}`}>
+                {!generated ? (
+                  <div className="empty-output"><span>YOUR WORDING<br/>APPEARS HERE</span><p>No account. No subscription. No pretending this is legal advice.</p></div>
+                ) : (
+                  <>
+                    <div className="output-head"><div><small>DRAFT GENERATED</small><h3>Copy. Check. Send.</h3></div><button onClick={copyLetter}>{copied ? "COPIED ✓" : "COPY"}</button></div>
+                    <pre>{letter}</pre>
+                    <p className="disclaimer">Check names, dates, facts and any legal issue specific to your situation before sending. This tool provides general information and drafting support, not legal advice.</p>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="quick-panel">
+              <div>
+                <p className="eyebrow">THE SOCIAL VERSION</p>
+                <blockquote>{selected.socialHook}</blockquote>
+              </div>
+              <div className="quick-action">
+                <p>Use the escalation ladder above, then verify the details against the official source before acting.</p>
+                <a className="primary" href={selected.sourceUrl} target="_blank" rel="noreferrer">Read the official guidance ↗</a>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -160,16 +180,18 @@ export default function RunaroundApp() {
         </div>
       </section>
 
-      <section className="social-strip">
-        <p>SOCIAL POST SEED</p>
-        <h2>“THIS CALL MAY BE RECORDED.”<br/><i>GOOD. ASK FOR IT.</i></h2>
-        <span>Privacy Act request tool coming next.</span>
+      <section className="social-library">
+        <p className="eyebrow">SOCIAL ENGINE / SOURCE-BACKED</p>
+        <h2>Outrage is the distribution.<br/>Accuracy is the product.</h2>
+        <div className="social-grid">
+          {socialSeeds.map((tool) => <article key={tool.id}><small>{tool.eyebrow}</small><strong>{tool.socialHook}</strong></article>)}
+        </div>
       </section>
 
       <footer>
         <div className="brand">THE RUNAROUND<span>™</span></div>
         <p>General information and drafting support for Aotearoa New Zealand. Not legal advice.</p>
-        <p>Rules change. Every tool should be re-verified against its official source before material updates.</p>
+        <p>Rules change. Check the linked official source before relying on a rule, deadline or entitlement.</p>
       </footer>
     </main>
   );
